@@ -1,17 +1,13 @@
 import { View, Text, StyleSheet } from 'react-native'
 import React, { useMemo, useRef, useCallback } from 'react'
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps'
+import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps'
 import BottomSheet from '@gorhom/bottom-sheet';
 
 const Map: React.FunctionComponent = () => {
 
   const bottomSheetRef = useRef<BottomSheet>(null)
   const snapPoints = useMemo(() => ['10%', '50%'], []) // two states-nothing between
-  const handleSheetChanges = useCallback((index: number) => {
-    console.log('handleSheetChanges', index)
-  }, [])
-
-
+  const handleSheetChanges = useCallback((index: number) => { console.log('handleSheetChanges', index) }, [])
 
   // google maps api araştır
   return (
@@ -20,12 +16,24 @@ const Map: React.FunctionComponent = () => {
         style={styles.map}
         provider={PROVIDER_GOOGLE}
         showsUserLocation={true}
-      />
+        followsUserLocation={true}
+      >
+        <Marker
+          coordinate={{
+            latitude: 41,
+            longitude: 29
+          }}
+          title={"Test"}
+          description={"Test description"}
+        />
+      </MapView>
       <BottomSheet
         ref={bottomSheetRef}
         index={1}
         snapPoints={snapPoints}
-        onChange={handleSheetChanges}>
+        onChange={handleSheetChanges}
+      >
+
       </BottomSheet>
     </View>
   )
