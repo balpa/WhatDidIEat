@@ -1,11 +1,17 @@
 import { View, Text, StyleSheet } from 'react-native'
 import React from 'react'
-import MapView from 'react-native-maps'
+import MapView, { PROVIDER_GOOGLE } from 'react-native-maps'
 
 const Map: React.FunctionComponent = () => {
+
+  // google maps api araştır
   return (
     <View style={styles.container}>
-      <MapView style={styles.map} />
+      <MapView
+        style={styles.map}
+        provider={PROVIDER_GOOGLE}
+        showsUserLocation={true}
+      />
     </View>
   )
 }
