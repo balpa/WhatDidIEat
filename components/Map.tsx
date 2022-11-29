@@ -20,16 +20,45 @@ const Map: React.FunctionComponent = () => {
   const snapPoints = useMemo((): string[] => ['10%', '50%'], [])
   const handleSheetChanges = useCallback((index: number) => { console.log('handleSheetChanges', index) }, [])
 
+  const [showCreateMarkerModal, setShowCreateMarkerModal] = useState<boolean>(false)
   const [markersArray, setMarkersArray] = useState<React.ReactElement[]>([])
   const [tappedLatLng, setTappedLatLon] = useState<{ latitude: number, longitude: number }>({
     latitude: 0,
     longitude: 0
   })
 
-  const TappedMarkerCalloutInside: React.FunctionComponent = () => {
+  // CREATE MARKER DATA MODAL
+  const TappedMarkerCalloutInsideModal: React.FunctionComponent = () => {
 
     const [placeTitle, setPlaceTitle] = useState<string>()
     const [placeDescription, setPlaceDescription] = useState<string>()
+    const [placeAvgPrice, setPlaceAvgPrice] = useState<string>()
+
+    function createMarker() {
+
+      let data = {
+        title: placeTitle,
+        description: placeDescription,
+        price: placeAvgPrice
+      }
+
+      setMarkersArray([
+        ...markersArray,
+        <Marker
+          key={markersArray.length}
+          coordinate={{
+            latitude: tappedLatLng.latitude,
+            longitude: tappedLatLng.longitude
+          }}
+          pinColor={'crimson'}>
+          <Callout>
+            <CalloutInside data={data} />
+          </Callout>
+        </Marker>
+      ])
+
+      setShowCreateMarkerModal(false)
+    }
 
     return (
       <>
@@ -49,15 +78,22 @@ const Map: React.FunctionComponent = () => {
                 setPlaceDescription(e.nativeEvent.text)
               }}
             />
+            <Input
+              leftIcon={<Icon name='monetization-on' />}
+              placeholder='Avg. Price'
+              onChange={(e: NativeSyntheticEvent<TextInputChangeEventData>) => {
+                setPlaceAvgPrice(e.nativeEvent.text)
+              }}
+            />
             <AirbnbRating
-              size={25}
+              size={20}
               reviewSize={15}
               defaultRating={4}
               showRating={true}
             />
             <TouchableOpacity
               style={styles.saveButtonContainer}
-              onPress={() => { console.log('bastik') }}
+              onPress={() => { createMarker() }}
             >
               <Text style={styles.saveButtonText}>save</Text>
             </TouchableOpacity>
@@ -67,10 +103,9 @@ const Map: React.FunctionComponent = () => {
     )
   }
 
-
   function setTappedLocationInfo(e: any) {
+    setShowCreateMarkerModal(true)
 
-    let arrayLen = markersArray.length
     let lat = e.nativeEvent.coordinate.latitude
     let lon = e.nativeEvent.coordinate.longitude
 
@@ -79,27 +114,27 @@ const Map: React.FunctionComponent = () => {
       longitude: lon
     })
 
-    setMarkersArray([
-      ...markersArray,
-      <Marker
-        key={arrayLen}
-        coordinate={{
-          latitude: lat,
-          longitude: lon
-        }}
-        pinColor={'crimson'}>
-        <Callout>
-          <CalloutInside />
-        </Callout>
-      </Marker>
-    ])
+    // setMarkersArray([
+    //   ...markersArray,
+    //   <Marker
+    //     key={arrayLen}
+    //     coordinate={{
+    //       latitude: lat,
+    //       longitude: lon
+    //     }}
+    //     pinColor={'crimson'}>
+    //     <Callout>
+    //       <CalloutInside />
+    //     </Callout>
+    //   </Marker>
+    // ])
 
   }
 
 
   return (
     <View style={styles.container}>
-      <TappedMarkerCalloutInside />
+      {showCreateMarkerModal && <TappedMarkerCalloutInsideModal />}
       <MapView
         style={styles.map}
         provider={PROVIDER_GOOGLE}
@@ -144,13 +179,14 @@ const styles = StyleSheet.create({
   tappedMarkerCalloutInsideContainer: {
     zIndex: 100,
     width: '90%',
-    height: 300,
+    height: 350,
     backgroundColor: 'white',
     position: 'absolute',
     borderRadius: 20,
+    paddingTop: 10,
     paddingBottom: 30,
     display: 'flex',
-    justifyContent: 'space-evenly',
+    justifyContent: 'center',
     alignItems: 'center',
 
   },
@@ -161,8 +197,15 @@ const styles = StyleSheet.create({
     letterSpacing: 1
   },
   saveButtonContainer: {
-    bottom: 10,
-    position: 'absolute'
+    bottom: 0,
+    position: 'absolute',
+    width: '50%',
+    height: 35,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   shadowContainer: {
     width: '100%',

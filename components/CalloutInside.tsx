@@ -1,7 +1,11 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 
-const CalloutInside = () => {
+interface PropTypes {
+  data: Object
+}
+
+const CalloutInside = ({ data }: PropTypes) => {
   return (
     <View>
       <Text>CalloutInside</Text>
