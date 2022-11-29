@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet, GestureResponderEvent } from 'react-native'
 import React, { useMemo, useRef, useCallback, useState, useEffect } from 'react'
-import MapView, { PROVIDER_GOOGLE, Marker, Callout, MapMarker } from 'react-native-maps'
+import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps'
 import BottomSheet from '@gorhom/bottom-sheet'
 
 
@@ -10,21 +10,37 @@ const Map: React.FunctionComponent = () => {
   const snapPoints = useMemo((): string[] => ['10%', '50%'], [])
   const handleSheetChanges = useCallback((index: number) => { console.log('handleSheetChanges', index) }, [])
 
-  const [tappedLatLng, setTappedLatLng] = useState<{ latitude: number | null, longitude: number | null }>({
-    latitude: null,
-    longitude: null
+  const [tappedLatLng, setTappedLatLon] = useState<{ latitude: number, longitude: number }>({
+    latitude: 0,
+    longitude: 0
   })
 
-  let markers = [
-    {
-      latitude: 41.05,
-      longitude: 29.90,
-      title: 'Foo Place',
-      subtitle: '1234 Foo Drive'
-    }
-  ];
+  const [markersArray, setMarkersArray] = useState<React.ReactElement[]>([])
 
-  // google maps api araştır / tasarım çiz
+  function setTappedLocationInfo(e: any) {
+
+    let lat = e.nativeEvent.coordinate.latitude
+    let lon = e.nativeEvent.coordinate.longitude
+
+    setTappedLatLon({
+      latitude: lat,
+      longitude: lon
+    })
+
+    setMarkersArray([...markersArray,
+    <Marker
+      key={lat}
+      coordinate={{
+        latitude: lat,
+        longitude: lon
+      }}
+      pinColor={'crimson'}
+      title={"Test"}
+      description={"Test description"} />
+    ])
+  }
+
+
   return (
     <View style={styles.container}>
       <MapView
@@ -38,22 +54,22 @@ const Map: React.FunctionComponent = () => {
           latitudeDelta: 0.2,
           longitudeDelta: 0.2
         }}
-        onPress={(e) => {
-          setTappedLatLng({
-            latitude: e.nativeEvent.coordinate.latitude,
-            longitude: e.nativeEvent.coordinate.latitude
-          })
-        }}
+        onPress={(e) => { setTappedLocationInfo(e) }}
       >
-        <Marker
+
+        {markersArray.length > 0 && markersArray.map((item) => {
+          return item
+        })}
+
+        {/* <Marker
           coordinate={{
-            latitude: 41,
-            longitude: 29
+            latitude: tappedLatLng.latitude,
+            longitude: tappedLatLng.longitude
           }}
           pinColor={'crimson'}
           title={"Test"}
           description={"Test description"}
-        />
+        /> */}
 
       </MapView>
       {/* <BottomSheet
