@@ -4,14 +4,24 @@ import {
   StyleSheet,
   TouchableOpacity,
   NativeSyntheticEvent,
-  TextInputChangeEventData
+  TextInputChangeEventData,
+  TouchableWithoutFeedback,
+  Animated
 } from 'react-native'
-import React, { useMemo, useRef, useCallback, useState } from 'react'
+import React, { useMemo, useRef, useCallback, useState, useEffect } from 'react'
 import MapView, { PROVIDER_GOOGLE, Marker, Callout } from 'react-native-maps'
 import BottomSheet from '@gorhom/bottom-sheet'
 import CalloutInside from './CalloutInside'
 import { AirbnbRating, Input, Icon } from '@rneui/themed';
 
+
+// backgroundColor: backgroundAnim.interpolate({
+//   inputRange: [0, 1],
+//   outputRange: [
+//     'rgba(0,0,0,0)',
+//     'rgba(0,0,0,1)'
+//   ]
+// })
 
 
 const Map: React.FunctionComponent = () => {
@@ -19,6 +29,7 @@ const Map: React.FunctionComponent = () => {
   const bottomSheetRef = useRef<BottomSheet>(null)
   const snapPoints = useMemo((): string[] => ['10%', '50%'], [])
   const handleSheetChanges = useCallback((index: number) => { console.log('handleSheetChanges', index) }, [])
+  const shadowBackgroundAnim = useRef<any>(new Animated.Value(0)).current
 
   const [showCreateMarkerModal, setShowCreateMarkerModal] = useState<boolean>(false)
   const [markersArray, setMarkersArray] = useState<React.ReactElement[]>([])
@@ -27,13 +38,32 @@ const Map: React.FunctionComponent = () => {
     longitude: 0
   })
 
+  //********************************* */
   // CREATE MARKER DATA MODAL
-  const TappedMarkerCalloutInsideModal: React.FunctionComponent = () => {
+  const TappedMarkerCreatorModal: React.FunctionComponent = () => {
 
     const [placeTitle, setPlaceTitle] = useState<string>()
     const [placeDescription, setPlaceDescription] = useState<string>()
     const [placeAvgPrice, setPlaceAvgPrice] = useState<string>()
 
+    useEffect(() => {     //shadow animation on modal opening
+      Animated.timing(shadowBackgroundAnim, {
+        toValue: 0.3,
+        duration: 700,
+        useNativeDriver: false
+      }).start()
+    }, [])
+
+    function closeModal() {
+      Animated.timing(shadowBackgroundAnim, {
+        toValue: 0,
+        duration: 700,
+        useNativeDriver: false
+      }).start()
+      setTimeout(() => {
+        setShowCreateMarkerModal(false)
+      }, 750)
+    }
     function createMarker() {
 
       let data = {
@@ -42,63 +72,73 @@ const Map: React.FunctionComponent = () => {
         price: placeAvgPrice
       }
 
-      setMarkersArray([
-        ...markersArray,
-        <Marker
-          key={markersArray.length}
-          coordinate={{
-            latitude: tappedLatLng.latitude,
-            longitude: tappedLatLng.longitude
-          }}
-          pinColor={'crimson'}>
-          <Callout>
-            <CalloutInside data={data} />
-          </Callout>
-        </Marker>
+      setMarkersArray([...markersArray,
+      <Marker
+        key={markersArray.length}
+        coordinate={{ latitude: tappedLatLng.latitude, longitude: tappedLatLng.longitude }}
+        pinColor={'crimson'}>
+        <Callout>
+          <CalloutInside data={data} />
+        </Callout>
+      </Marker>
       ])
 
       setShowCreateMarkerModal(false)
     }
-
     return (
       <>
-        <View style={styles.shadowContainer}>
-          <View style={styles.tappedMarkerCalloutInsideContainer}>
-            <Input
-              leftIcon={<Icon name='place' />}
-              placeholder='Place'
-              onChange={(e: NativeSyntheticEvent<TextInputChangeEventData>) => {
-                setPlaceTitle(e.nativeEvent.text)
-              }}
-            />
-            <Input
-              leftIcon={<Icon name='info-outline' />}
-              placeholder='Description'
-              onChange={(e: NativeSyntheticEvent<TextInputChangeEventData>) => {
-                setPlaceDescription(e.nativeEvent.text)
-              }}
-            />
-            <Input
-              leftIcon={<Icon name='monetization-on' />}
-              placeholder='Avg. Price'
-              onChange={(e: NativeSyntheticEvent<TextInputChangeEventData>) => {
-                setPlaceAvgPrice(e.nativeEvent.text)
-              }}
-            />
-            <AirbnbRating
-              size={20}
-              reviewSize={15}
-              defaultRating={4}
-              showRating={true}
-            />
-            <TouchableOpacity
-              style={styles.saveButtonContainer}
-              onPress={() => { createMarker() }}
-            >
-              <Text style={styles.saveButtonText}>save</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <Animated.View style={[
+          styles.shadowContainer,
+          {
+            backgroundColor: shadowBackgroundAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['rgba(0,0,0,0)', 'rgba(0,0,0,1)']
+            })
+          }
+        ]}>
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.touchableInsideShadowContainer}
+            onPress={() => closeModal()}>
+            <TouchableWithoutFeedback style={styles.touchableWOFeedbackInsideTO}>
+              <View style={styles.tappedMarkerCreatorContainer}>
+                <Input
+                  leftIcon={<Icon name='place' />}
+                  placeholder='Place'
+                  onChange={(e: NativeSyntheticEvent<TextInputChangeEventData>) => {
+                    setPlaceTitle(e.nativeEvent.text)
+                  }}
+                />
+                <Input
+                  leftIcon={<Icon name='info-outline' />}
+                  placeholder='Description'
+                  onChange={(e: NativeSyntheticEvent<TextInputChangeEventData>) => {
+                    setPlaceDescription(e.nativeEvent.text)
+                  }}
+                />
+                <Input
+                  leftIcon={<Icon name='monetization-on' />}
+                  placeholder='Avg. Price'
+                  onChange={(e: NativeSyntheticEvent<TextInputChangeEventData>) => {
+                    setPlaceAvgPrice(e.nativeEvent.text)
+                  }}
+                />
+                <AirbnbRating
+                  size={20}
+                  reviewSize={15}
+                  defaultRating={4}
+                  showRating={true}
+                />
+                <TouchableOpacity
+                  style={styles.saveButtonContainer}
+                  onPress={() => { createMarker() }}
+                >
+                  <Text style={styles.saveButtonText}>save</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </TouchableOpacity>
+        </Animated.View>
       </>
     )
   }
@@ -109,32 +149,13 @@ const Map: React.FunctionComponent = () => {
     let lat = e.nativeEvent.coordinate.latitude
     let lon = e.nativeEvent.coordinate.longitude
 
-    setTappedLatLon({
-      latitude: lat,
-      longitude: lon
-    })
-
-    // setMarkersArray([
-    //   ...markersArray,
-    //   <Marker
-    //     key={arrayLen}
-    //     coordinate={{
-    //       latitude: lat,
-    //       longitude: lon
-    //     }}
-    //     pinColor={'crimson'}>
-    //     <Callout>
-    //       <CalloutInside />
-    //     </Callout>
-    //   </Marker>
-    // ])
-
+    setTappedLatLon({ latitude: lat, longitude: lon })
   }
-
+  //********************************* */
 
   return (
     <View style={styles.container}>
-      {showCreateMarkerModal && <TappedMarkerCalloutInsideModal />}
+      {showCreateMarkerModal && <TappedMarkerCreatorModal />}
       <MapView
         style={styles.map}
         provider={PROVIDER_GOOGLE}
@@ -154,11 +175,10 @@ const Map: React.FunctionComponent = () => {
       </MapView>
       <BottomSheet
         ref={bottomSheetRef}
-        index={1}
+        index={0}
         snapPoints={snapPoints}
         onChange={handleSheetChanges}
       >
-
       </BottomSheet>
     </View>
   )
@@ -174,9 +194,9 @@ const styles = StyleSheet.create({
   },
   map: {
     width: '100%',
-    height: '100%'
+    height: '100%',
   },
-  tappedMarkerCalloutInsideContainer: {
+  tappedMarkerCreatorContainer: {
     zIndex: 100,
     width: '90%',
     height: 350,
@@ -212,10 +232,18 @@ const styles = StyleSheet.create({
     height: '100%',
     position: 'absolute',
     zIndex: 10,
-    display: 'flex',
+    //backgroundColor: 'rgba(0,0,0,0.2)'
+  },
+  touchableInsideShadowContainer: {
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.2)'
+    zIndex: -100
+  },
+  touchableWOFeedbackInsideTO: {
+    width: '90%',
+    height: 350
   }
 
 })
