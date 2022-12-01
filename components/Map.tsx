@@ -9,7 +9,7 @@ import {
   Animated
 } from 'react-native'
 import React, { useMemo, useRef, useCallback, useState, useEffect } from 'react'
-import MapView, { PROVIDER_GOOGLE, Marker, Callout } from 'react-native-maps'
+import MapView, { PROVIDER_GOOGLE, Marker, Callout, MapPressEvent } from 'react-native-maps'
 import BottomSheet from '@gorhom/bottom-sheet'
 import CalloutInside from './CalloutInside'
 import { AirbnbRating, Input, Icon } from '@rneui/themed';
@@ -29,8 +29,10 @@ const Map: React.FunctionComponent = () => {
   const bottomSheetRef = useRef<BottomSheet>(null)
   const snapPoints = useMemo((): string[] => ['10%', '50%'], [])
   const handleSheetChanges = useCallback((index: number) => { console.log('handleSheetChanges', index) }, [])
-  const shadowBackgroundAnim = useRef<any>(new Animated.Value(0)).current
+  const shadowBackgroundAnim = useRef<any>(new Animated.Value(0)).current // find type
+  const scaleAnim = useRef<any>(new Animated.Value(0)).current
 
+  const [isCalloutOpen, setIsCalloutOpen] = useState<boolean>(false)
   const [showCreateMarkerModal, setShowCreateMarkerModal] = useState<boolean>(false)
   const [markersArray, setMarkersArray] = useState<React.ReactElement[]>([])
   const [tappedLatLng, setTappedLatLon] = useState<{ latitude: number, longitude: number }>({
@@ -47,6 +49,11 @@ const Map: React.FunctionComponent = () => {
     const [placeAvgPrice, setPlaceAvgPrice] = useState<string>()
 
     useEffect(() => {     //shadow animation on modal opening
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: false
+      }).start()
+
       Animated.timing(shadowBackgroundAnim, {
         toValue: 0.3,
         duration: 700,
@@ -55,6 +62,12 @@ const Map: React.FunctionComponent = () => {
     }, [])
 
     function closeModal() {
+      Animated.timing(scaleAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: false
+      }).start()
+
       Animated.timing(shadowBackgroundAnim, {
         toValue: 0,
         duration: 700,
@@ -78,12 +91,12 @@ const Map: React.FunctionComponent = () => {
         coordinate={{ latitude: tappedLatLng.latitude, longitude: tappedLatLng.longitude }}
         pinColor={'crimson'}>
         <Callout>
-          <CalloutInside data={data} />
+          <CalloutInside data={data} setIsCalloutOpen={setIsCalloutOpen} />
         </Callout>
       </Marker>
       ])
 
-      setShowCreateMarkerModal(false)
+      closeModal() // not working properly cuz of state change
     }
     return (
       <>
@@ -101,7 +114,10 @@ const Map: React.FunctionComponent = () => {
             style={styles.touchableInsideShadowContainer}
             onPress={() => closeModal()}>
             <TouchableWithoutFeedback style={styles.touchableWOFeedbackInsideTO}>
-              <View style={styles.tappedMarkerCreatorContainer}>
+              <Animated.View style={[
+                styles.tappedMarkerCreatorContainer,
+                { transform: [{ scale: scaleAnim }] }
+              ]}>
                 <Input
                   leftIcon={<Icon name='place' />}
                   placeholder='Place'
@@ -135,15 +151,16 @@ const Map: React.FunctionComponent = () => {
                 >
                   <Text style={styles.saveButtonText}>save</Text>
                 </TouchableOpacity>
-              </View>
+              </Animated.View>
             </TouchableWithoutFeedback>
           </TouchableOpacity>
         </Animated.View>
       </>
     )
   }
+  //********************************* */
 
-  function setTappedLocationInfo(e: any) {
+  function setTappedLocationInfo(e: MapPressEvent) {
     setShowCreateMarkerModal(true)
 
     let lat = e.nativeEvent.coordinate.latitude
@@ -151,7 +168,6 @@ const Map: React.FunctionComponent = () => {
 
     setTappedLatLon({ latitude: lat, longitude: lon })
   }
-  //********************************* */
 
   return (
     <View style={styles.container}>

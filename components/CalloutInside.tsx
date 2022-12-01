@@ -1,33 +1,32 @@
 import { View, Text, StyleSheet } from 'react-native'
-import React from 'react'
+import React, { useEffect } from 'react'
+import { Icon } from '@rneui/themed';
 
 interface PropTypes {
   data: {
     title: string | undefined,
     description: string | undefined,
     price: string | undefined
-  }
+  },
+  setIsCalloutOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-const CalloutInside = ({ data }: PropTypes) => {
+const CalloutInside = ({ data, setIsCalloutOpen }: PropTypes) => {
 
-  console.log(data)
+
   return (
     <View style={styles.container}>
       <View style={styles.infoContainers}>
-        <Text style={styles.titleText}>
-          {data.title}
-        </Text>
+        <Icon name='place' />
+        <Text style={styles.titleText}>{data.title}</Text>
       </View>
       <View style={styles.infoContainers}>
-        <Text>
-          {data.description}
-        </Text>
+        <Icon name='description' />
+        <Text>{data.description}</Text>
       </View>
       <View style={styles.infoContainers}>
-        <Text style={styles.priceText}>
-          {data.price}
-        </Text>
+        <Icon name='monetization-on' />
+        <Text style={styles.priceText}>{data.price}</Text>
       </View>
       {/* <View><Text>image mb</Text></View> */}
     </View>
@@ -45,15 +44,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly'
   },
   infoContainers: {
-    margin: 10
+    margin: 10,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center'
   },
   titleText: {
     fontSize: 18,
-    fontWeight: '800'
+    fontWeight: '800',
   },
   priceText: {
     fontSize: 16,
-    fontWeight: '700'
+    fontWeight: '700',
   }
 
 })
